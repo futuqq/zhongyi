@@ -1,0 +1,171 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中医典籍</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--c:#1a1a2e;--c2:#16213e;--c3:#0f3460;
+--accent:#e94560;--gold:#f0c040;--gold2:#d4a017;
+--green:#2d6a4f;--red:#c1121f;--warm:#b5451b;--neutral:#6a0572;
+--text:#eee;--muted:#aaa;--card:#1e2a3a;--card2:#243447;
+--shadow:0 8px 32px rgba(0,0,0,.4);--radius:16px;
+}
+body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:var(--c);color:var(--text);min-height:100vh}
+header{text-align:center;padding:48px 20px 40px;background:linear-gradient(135deg,#0f3460 0%,#1a1a2e 60%,#2d1b4e 100%);position:relative;overflow:hidden}
+header::before{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.03"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.header-content{position:relative;z-index:1}
+header h1{font-size:2.8em;background:linear-gradient(90deg,#f0c040,#e94560);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.15em;position:relative}
+header p{color:var(--muted);margin-top:12px;font-size:1.1em;position:relative}
+.header-divider{width:80px;height:3px;background:linear-gradient(90deg,var(--gold2),var(--gold));margin:20px auto 0;border-radius:2px}
+
+main{padding:40px 20px 60px;max-width:1100px;margin:0 auto}
+
+.cards-section{margin-bottom:60px}
+.section-title{text-align:center;font-size:1.4em;color:var(--gold);margin-bottom:30px;letter-spacing:.1em}
+.cards-container{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+@media(max-width:900px){.cards-container{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.cards-container{grid-template-columns:1fr}}
+
+.main-card{border-radius:var(--radius);background:var(--card);border:1px solid rgba(255,255,255,.06);padding:28px;transition:transform .25s,box-shadow .25s;cursor:pointer;animation:fadeUp .5s ease both;position:relative;overflow:hidden;display:block;text-decoration:none;color:inherit}
+.main-card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--gold2),var(--gold))}
+.main-card:hover{transform:translateY(-6px);box-shadow:var(--shadow)}
+.main-card:hover .card-icon{transform:scale(1.1)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.main-card:nth-child(2){animation-delay:.1s}
+.main-card:nth-child(3){animation-delay:.2s}
+
+.card-icon{font-size:3em;margin-bottom:16px;transition:transform .3s;display:block}
+.card-title{font-size:1.3em;font-weight:700;color:#fff;letter-spacing:.08em;margin-bottom:8px}
+.card-desc{color:var(--muted);line-height:1.7;font-size:.9em;margin-bottom:16px}
+.card-tags{display:flex;flex-wrap:wrap;gap:8px}
+.card-tag{display:inline-block;padding:4px 12px;border-radius:50px;font-size:.78em;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--muted);transition:all .3s}
+.main-card:hover .card-tag{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)}
+.card-arrow{position:absolute;bottom:20px;right:20px;font-size:1.2em;color:var(--gold);opacity:.6;transition:all .3s}
+.main-card:hover .card-arrow{opacity:1;transform:translateX(4px)}
+
+.book-card{border-radius:var(--radius);background:var(--card);border:1px solid rgba(255,255,255,.06);padding:20px;transition:all .25s;cursor:pointer;display:block;text-decoration:none;color:inherit}
+.book-card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:rgba(240,192,64,.3)}
+.book-card:hover .book-arrow{opacity:1;transform:translateX(4px)}
+.book-title{font-size:1.1em;font-weight:600;color:#fff;margin-bottom:6px;letter-spacing:.05em}
+.book-meta{font-size:.82em;color:var(--muted);margin-bottom:10px}
+.book-preview{font-size:.85em;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.book-arrow{color:var(--gold);opacity:.5;transition:all .3s;float:right;font-size:1.1em}
+
+.books-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px}
+@media(max-width:900px){.books-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.books-grid{grid-template-columns:1fr}}
+
+.source-section{margin-top:60px;padding-top:40px;border-top:1px solid rgba(255,255,255,.06)}
+.source-title{text-align:center;font-size:1.2em;color:var(--gold);margin-bottom:24px;letter-spacing:.08em}
+.source-list{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
+.source-link{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:50px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:var(--muted);text-decoration:none;font-size:.9em;transition:all .3s}
+.source-link:hover{background:rgba(255,255,255,.1);border-color:rgba(240,192,64,.3);color:var(--text)}
+.source-link .icon{margin-right:4px}
+.source-link .arrow{color:var(--gold);opacity:.6}
+
+footer{text-align:center;padding:40px 20px;color:var(--muted);font-size:.85em;border-top:1px solid rgba(255,255,255,.05);margin-top:40px}
+footer a{color:var(--gold);text-decoration:none}
+footer a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-content">
+    <h1>中医典籍</h1>
+    <p>收录中医经典古籍</p>
+    <div class="header-divider"></div>
+  </div>
+</header>
+
+<main>
+  <section class="cards-section">
+    <h2 class="section-title">典籍分类</h2>
+    <div class="cards-container">
+      <a href="html/index.html" class="main-card">
+        <span class="card-icon">📚</span>
+        <h3 class="card-title">中医书籍</h3>
+        <p class="card-desc">收录中医经典原著，包含药性赋、医学三字经、汤头歌诀等必备典籍。</p>
+        <div class="card-tags">
+          <span class="card-tag">药性赋</span>
+          <span class="card-tag">医学三字经</span>
+          <span class="card-tag">汤头歌诀</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <a href="tupu/yaoxingfu.html" class="main-card">
+        <span class="card-icon">🗺️</span>
+        <h3 class="card-title">图谱</h3>
+        <p class="card-desc">中药可视化图谱，将传统药性以现代可视化方式呈现，便于理解和记忆。</p>
+        <div class="card-tags">
+          <span class="card-tag">药性赋可视化</span>
+          <span class="card-tag">更多图谱</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <a href="learn/index.html" class="main-card">
+        <span class="card-icon">🎓</span>
+        <h3 class="card-title">辅助学习</h3>
+        <p class="card-desc">学习辅助工具，包含背诵记忆、测验练习等功能模块，助您更好地掌握中医知识。</p>
+        <div class="card-tags">
+          <span class="card-tag">功能开发中</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="books-section">
+    <h2 class="section-title">经典典籍</h2>
+    <div class="books-grid">
+      <a href="html/yaoxingfu.html" class="book-card">
+        <div class="book-title">药性赋</div>
+        <div class="book-meta">寒·热·温·平 · 254味药</div>
+        <div class="book-preview">诸药赋性，此类最寒。犀角解乎心热；羚羊清乎肺肝。泽泻利水通淋而补阴不足；海藻散瘿破气而治疝何难...</div>
+        <span class="book-arrow">→</span>
+      </a>
+
+      <a href="html/yixuesanzijing.html" class="book-card">
+        <div class="book-title">医学三字经</div>
+        <div class="book-meta">清代·陈念祖 · 医学入门</div>
+        <div class="book-preview">医之始，本岐黄，灵枢作，素问详，难经出，更洋洋。越汉季，有南阳，六经辨，圣道彰...</div>
+        <span class="book-arrow">→</span>
+      </a>
+
+      <a href="html/tangtougejue.html" class="book-card">
+        <div class="book-title">汤头歌诀</div>
+        <div class="book-meta">清代·汪昂 · 方剂学经典</div>
+        <div class="book-preview">补益之剂、发表之剂、攻里之剂、涌吐之剂、和解之剂...二十类方剂分类编排，便于记诵...</div>
+        <span class="book-arrow">→</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="source-section">
+    <h2 class="source-title">原文资源</h2>
+    <div class="source-list">
+      <a href="md/yaoxingfu.md" class="source-link">
+        <span class="icon">📄</span>药性赋.md
+        <span class="arrow">↗</span>
+      </a>
+      <a href="md/yixuesanzijing.md" class="source-link">
+        <span class="icon">📄</span>医学三字经.md
+        <span class="arrow">↗</span>
+      </a>
+      <a href="md/tangtougejue.md" class="source-link">
+        <span class="icon">📄</span>汤头歌诀.md
+        <span class="arrow">↗</span>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>中医典籍 · 传承经典 · <a href="https://github.com">查看源码</a></p>
+</footer>
+</body>
+</html>

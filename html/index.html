@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中医书籍</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--c:#1a1a2e;--card:#1e2a3a;--gold:#f0c040;--text:#eee;--muted:#aaa;}
+body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:var(--c);color:var(--text);min-height:100vh;padding:40px 20px}
+header{text-align:center;margin-bottom:40px}
+header h1{font-size:2em;background:linear-gradient(90deg,#f0c040,#e94560);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+main{max-width:900px;margin:0 auto}
+.book-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+.book-card{display:block;padding:24px;border-radius:16px;background:var(--card);border:1px solid rgba(255,255,255,.06);text-decoration:none;color:inherit;transition:all .25s}
+.book-card:hover{transform:translateY(-4px);box-shadow:0 8px 32px rgba(0,0,0,.4);border-color:rgba(240,192,64,.3)}
+.book-title{font-size:1.2em;font-weight:600;color:#fff;margin-bottom:8px}
+.book-meta{font-size:.85em;color:var(--muted);margin-bottom:12px}
+.book-desc{font-size:.9em;color:var(--muted);line-height:1.6}
+.back{text-align:center;margin-top:40px}
+.back a{color:var(--gold);text-decoration:none}
+.back a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<header>
+  <h1>📚 中医书籍</h1>
+</header>
+<main>
+  <div class="book-list">
+    <a href="yaoxingfu.html" class="book-card">
+      <div class="book-title">药性赋</div>
+      <div class="book-meta">寒·热·温·平 · 254味药</div>
+      <div class="book-desc">诸药赋性，此类最寒。犀角解乎心热；羚羊清乎肺肝。泽泻利水通淋而补阴不足...</div>
+    </a>
+    <a href="yixuesanzijing.html" class="book-card">
+      <div class="book-title">医学三字经</div>
+      <div class="book-meta">清代·陈念祖 · 医学入门</div>
+      <div class="book-desc">医之始，本岐黄，灵枢作，素问详，难经出，更洋洋。越汉季，有南阳，六经辨，圣道彰...</div>
+    </a>
+    <a href="tangtougejue.html" class="book-card">
+      <div class="book-title">汤头歌诀</div>
+      <div class="book-meta">清代·汪昂 · 方剂学经典</div>
+      <div class="book-desc">补益之剂、发表之剂、攻里之剂...二十类方剂分类编排，便于记诵。</div>
+    </a>
+  </div>
+  <div class="back"><a href="../index.html">← 返回首页</a></div>
+</main>
+</body>
+</html>

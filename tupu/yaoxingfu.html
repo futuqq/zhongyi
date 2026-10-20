@@ -1,0 +1,360 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>药性赋 — 中药可视化</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--c:#1a1a2e;--c2:#16213e;--c3:#0f3460;--accent:#e94560;
+--gold:#f0c040;--gold2:#d4a017;
+--green:#2d6a4f;--red:#c1121f;--warm:#b5451b;--neutral:#6a0572;
+--text:#eee;--muted:#aaa;--card:#1e2a3a;--card2:#243447;
+--shadow:0 8px 32px rgba(0,0,0,.4);--radius:16px;
+}
+body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:var(--c);color:var(--text);min-height:100vh}
+header{text-align:center;padding:48px 20px 32px;background:linear-gradient(135deg,#0f3460 0%,#1a1a2e 60%,#2d1b4e 100%);position:relative;overflow:hidden}
+header::before{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.03"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+header h1{font-size:2.6em;background:linear-gradient(90deg,#f0c040,#e94560);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.12em;position:relative}
+header p{color:var(--muted);margin-top:10px;font-size:1.05em;position:relative}
+.stats{display:flex;justify-content:center;gap:12px;margin-top:22px;flex-wrap:wrap;position:relative}
+.stat{display:flex;align-items:center;gap:8px;font-size:.9em;padding:9px 20px;border-radius:50px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);cursor:pointer;transition:all .3s;user-select:none}
+.stat:hover{border-color:rgba(255,255,255,.3);transform:translateY(-2px)}
+.stat.active{border-color:transparent;font-weight:700;transform:translateY(-2px)}
+.stat.active{background:linear-gradient(90deg,var(--gold2),var(--gold));color:var(--c);border-color:transparent}
+.stat.active.hot{background:linear-gradient(90deg,#c1121f,#e63946);color:#fff}
+.stat.active.cold{background:linear-gradient(90deg,#2d6a4f,#40916c);color:#fff}
+.stat.active.warm{background:linear-gradient(90deg,#b5451b,#e76f51);color:#fff}
+.stat.active.neutral{background:linear-gradient(90deg,#6a0572,#9d4edd);color:#fff}
+.stat .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.hot .dot{background:#c1121f}
+.warm .dot{background:#b5451b}
+.cold .dot{background:#2d6a4f}
+.neutral .dot{background:#6a0572}
+.stat strong{color:var(--gold);font-size:1.15em}
+.stat.active strong{color:#fff}
+.search-wrap{padding:12px 20px 4px;display:flex;justify-content:center}
+#search{width:min(560px,95vw);padding:12px 22px;border-radius:50px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;font-size:1em;outline:none;transition:border .3s;font-family:inherit}
+#search:focus{border-color:var(--gold)}
+#search::placeholder{color:var(--muted)}
+main{padding:24px 16px 60px;max-width:1200px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.card{border-radius:var(--radius);padding:20px;background:var(--card);border:1px solid rgba(255,255,255,.06);transition:transform .25s,box-shadow .25s;cursor:default;animation:fadeUp .4s ease both}
+.card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.card-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
+.code{min-width:46px;height:36px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.72em;font-weight:800;flex-shrink:0;color:#fff;line-height:1.2}
+.code .cat-num{font-size:.95em}
+.code .seq-num{font-size:.7em;opacity:.8}
+.code.cold{background:linear-gradient(135deg,#2d6a4f,#40916c)}
+.code.hot{background:linear-gradient(135deg,#c1121f,#e63946)}
+.code.warm{background:linear-gradient(135deg,#b5451b,#e76f51)}
+.code.neutral{background:linear-gradient(135deg,#6a0572,#9d4edd)}
+.title-wrap{flex:1;min-width:0}
+.card-title{font-size:1.15em;font-weight:700;color:#fff;letter-spacing:.06em;line-height:1.3}
+.card-pinyin{font-size:.8em;color:var(--muted);margin-top:2px;letter-spacing:.04em;font-style:italic}
+.card-desc{color:var(--muted);line-height:1.8;font-size:.9em}
+.tag{display:inline-block;padding:2px 9px;border-radius:50px;font-size:.72em;margin:3px 3px 0 0;opacity:.75}
+.tag.cold{border:1px solid #40916c;color:#40916c}
+.tag.hot{border:1px solid #e63946;color:#e63946}
+.tag.warm{border:1px solid #e76f51;color:#e76f51}
+.tag.neutral{border:1px solid #9d4edd;color:#9d4edd}
+.empty{text-align:center;padding:80px 20px;color:var(--muted);font-size:1.1em}
+.empty-icon{font-size:3em;margin-bottom:12px;opacity:.4;display:block}
+footer{text-align:center;padding:30px;color:var(--muted);font-size:.82em;border-top:1px solid rgba(255,255,255,.05)}
+@media(max-width:600px){header h1{font-size:1.8em}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>药性赋</h1>
+  <p>寒·热·温·平 — 中药药性可视化</p>
+  <div class="stats">
+    <div class="stat active" data-cat="all">全部 <strong>254</strong></div>
+    <div class="stat hot" data-cat="hot"><span class="dot"></span>热性药 <strong>66</strong> 种</div>
+    <div class="stat cold" data-cat="cold"><span class="dot"></span>寒性药 <strong>66</strong> 种</div>
+    <div class="stat warm" data-cat="warm"><span class="dot"></span>温性药 <strong>54</strong> 种</div>
+    <div class="stat neutral" data-cat="neutral"><span class="dot"></span>平性药 <strong>68</strong> 种</div>
+  </div>
+</header>
+<div class="search-wrap">
+  <input id="search" type="text" placeholder="🔍 输入药名或拼音搜索，如：犀角、xijiao、生姜…" />
+</div>
+<main>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none"><span class="empty-icon">🌿</span>未找到相关药材</div>
+</main>
+<footer>药性赋 · 原文出自《药性赋》· <a href="../../index.html">返回首页</a></footer>
+<script>
+const herbs=[
+//寒性药 1-XX
+{name:"犀角",pinyin:"xījiǎo",cat:"cold",seq:1,desc:"解乎心热"},
+{name:"羚羊",pinyin:"língyáng",cat:"cold",seq:2,desc:"清乎肺肝"},
+{name:"泽泻",pinyin:"zéxiè",cat:"cold",seq:3,desc:"利水通淋而补阴不足"},
+{name:"海藻",pinyin:"hǎizǎo",cat:"cold",seq:4,desc:"散瘿破气而治疝"},
+{name:"菊花",pinyin:"júhuā",cat:"cold",seq:5,desc:"明目清头风"},
+{name:"射干",pinyin:"shègān",cat:"cold",seq:6,desc:"疗咽闭而消痈毒"},
+{name:"薏苡",pinyin:"yìyǐ",cat:"cold",seq:7,desc:"理脚气而除风湿"},
+{name:"藕节",pinyin:"ǒujié",cat:"cold",seq:8,desc:"消瘀血而止吐衄"},
+{name:"瓜蒌子",pinyin:"guālóuzǐ",cat:"cold",seq:9,desc:"下气润肺喘，宽中"},
+{name:"车前子",pinyin:"chēqiánzǐ",cat:"cold",seq:10,desc:"止泻利小便，尤能明目"},
+{name:"黄柏",pinyin:"huángbò",cat:"cold",seq:11,desc:"疮用"},
+{name:"兜铃",pinyin:"dōulíng",cat:"cold",seq:12,desc:"嗽医"},
+{name:"地骨皮",pinyin:"dìgǔpí",cat:"cold",seq:13,desc:"退热除蒸"},
+{name:"薄荷叶",pinyin:"bòheyè",cat:"cold",seq:14,desc:"消风清肿"},
+{name:"枳壳",pinyin:"zhǐké",cat:"cold",seq:15,desc:"宽中下气，缓"},
+{name:"枳实",pinyin:"zhǐshí",cat:"cold",seq:16,desc:"宽中下气，速"},
+{name:"干葛",pinyin:"gàngě",cat:"cold",seq:17,desc:"疗肌解表，先"},
+{name:"柴胡",pinyin:"cháihú",cat:"cold",seq:18,desc:"疗肌解表，次"},
+{name:"百部",pinyin:"bǎibù",cat:"cold",seq:19,desc:"治肺热，咳嗽可止"},
+{name:"栀子",pinyin:"zhīzǐ",cat:"cold",seq:20,desc:"凉心肾，鼻衄最宜"},
+{name:"玄参",pinyin:"xuánshēn",cat:"cold",seq:21,desc:"治结热毒痈，清利咽膈"},
+{name:"升麻",pinyin:"shēngmá",cat:"cold",seq:22,desc:"消风热肿毒，发散疮痍"},
+{name:"腻粉",pinyin:"nìfěn",cat:"cold",seq:23,desc:"抑肺而敛肛门"},
+{name:"金箔",pinyin:"jīnbó",cat:"cold",seq:24,desc:"镇心而安魂魄"},
+{name:"茵陈",pinyin:"yīnchén",cat:"cold",seq:25,desc:"主黄疸而利水"},
+{name:"瞿麦",pinyin:"qúmài",cat:"cold",seq:26,desc:"治热淋之有血"},
+{name:"朴硝",pinyin:"pǔxiāo",cat:"cold",seq:27,desc:"通大肠，破血而止痰僻"},
+{name:"石膏",pinyin:"shígāo",cat:"cold",seq:28,desc:"治头痛，解肌而消烦渴"},
+{name:"前胡",pinyin:"qiánhú",cat:"cold",seq:29,desc:"除内外之痰实"},
+{name:"滑石",pinyin:"huáshí",cat:"cold",seq:30,desc:"利六腑之涩结"},
+{name:"天门冬",pinyin:"tiānméndōng",cat:"cold",seq:31,desc:"止嗽，补血涸而润心肝"},
+{name:"麦门冬",pinyin:"màiméndōng",cat:"cold",seq:32,desc:"清心，解烦渴而除肺热"},
+{name:"竹茹",pinyin:"zhúrú",cat:"cold",seq:33,desc:"治虚烦、除哕呕"},
+{name:"大黄",pinyin:"dàihuáng",cat:"cold",seq:34,desc:"通秘结、导瘀血"},
+{name:"黄连",pinyin:"huánglián",cat:"cold",seq:35,desc:"治冷热之痢，厚肠胃而止泻"},
+{name:"淫羊藿",pinyin:"yínyánghuò",cat:"cold",seq:36,desc:"疗风寒之痹，补阴虚而助阳"},
+{name:"茅根",pinyin:"máogēn",cat:"cold",seq:37,desc:"止血与吐衄"},
+{name:"石苇",pinyin:"shíwěi",cat:"cold",seq:38,desc:"通淋与小肠"},
+{name:"熟地黄",pinyin:"shúdìhuáng",cat:"cold",seq:39,desc:"补血且疗虚损"},
+{name:"生地黄",pinyin:"shēngdìhuáng",cat:"cold",seq:40,desc:"宣血更医眼疮"},
+{name:"赤芍药",pinyin:"chìsháoyào",cat:"cold",seq:41,desc:"破血而疗腹痛，烦热亦解"},
+{name:"白芍药",pinyin:"báisháoyào",cat:"cold",seq:42,desc:"补虚而生新血，温热尤良"},
+{name:"牵牛",pinyin:"qiānniú",cat:"cold",seq:43,desc:"消肿满逐水"},
+{name:"贯众",pinyin:"guànzhòng",cat:"cold",seq:44,desc:"除热毒杀虫"},
+{name:"金铃子",pinyin:"jīnlíngzǐ",cat:"cold",seq:45,desc:"治疝气而补精血"},
+{name:"萱草根",pinyin:"xuāncǎogēn",cat:"cold",seq:46,desc:"治五淋而消乳肿"},
+{name:"侧柏叶",pinyin:"cèbǎiyè",cat:"cold",seq:47,desc:"治血山崩漏之疾"},
+{name:"香附子",pinyin:"xiāngfùzǐ",cat:"cold",seq:48,desc:"理气血妇人之用"},
+{name:"地肤子",pinyin:"dìfūzǐ",cat:"cold",seq:49,desc:"利膀胱，可洗皮肤之风"},
+{name:"山豆根",pinyin:"shāndòugēn",cat:"cold",seq:50,desc:"解热毒，能止咽喉之痛"},
+{name:"白藓皮",pinyin:"báixiānpí",cat:"cold",seq:51,desc:"去风治筋弱，疗足顽痹"},
+{name:"旋覆花",pinyin:"xuánfùhuā",cat:"cold",seq:52,desc:"明目治头风，消痰嗽壅"},
+{name:"荆芥穗",pinyin:"jīngjièsuì",cat:"cold",seq:53,desc:"清头目便血，疏风散疮"},
+{name:"瓜蒌根",pinyin:"guālóugēn",cat:"cold",seq:54,desc:"疗黄疸毒痈，消渴解痰"},
+{name:"地榆",pinyin:"dìyú",cat:"cold",seq:55,desc:"疗崩漏，止血止痢"},
+{name:"昆布",pinyin:"kūnbù",cat:"cold",seq:56,desc:"破疝气，散瘿散瘤"},
+{name:"淡竹叶",pinyin:"dànzhúyè",cat:"cold",seq:57,desc:"疗伤寒、解虚烦，功倍"},
+{name:"牡丹皮",pinyin:"mǔdānpí",cat:"cold",seq:58,desc:"除结气、破瘀血"},
+{name:"知母",pinyin:"zhīmǔ",cat:"cold",seq:59,desc:"止嗽而骨蒸退"},
+{name:"牡蛎",pinyin:"mǔlì",cat:"cold",seq:60,desc:"涩精而虚汗收"},
+{name:"贝母",pinyin:"bèimǔ",cat:"cold",seq:61,desc:"清痰止咳嗽而利心肺"},
+{name:"桔梗",pinyin:"jiégěng",cat:"cold",seq:62,desc:"下气利胸膈而治咽喉"},
+{name:"黄芩",pinyin:"huángqín",cat:"cold",seq:63,desc:"治诸热，兼主五淋"},
+{name:"槐花",pinyin:"huánghuā",cat:"cold",seq:64,desc:"治肠风，亦医痔痢"},
+{name:"常山",pinyin:"chángshān",cat:"cold",seq:65,desc:"理痰结而治温疟"},
+{name:"葶苈",pinyin:"tínglì",cat:"cold",seq:66,desc:"泻肺喘而通水气"},
+//热性药 2-XX
+{name:"荜拨",pinyin:"bìbō",cat:"hot",seq:1,desc:"温中"},
+{name:"生姜",pinyin:"shēngjiāng",cat:"hot",seq:2,desc:"发散"},
+{name:"五味子",pinyin:"wǔwèizǐ",cat:"hot",seq:3,desc:"止嗽痰，滋肾水"},
+{name:"腽肭脐",pinyin:"wànàqí",cat:"hot",seq:4,desc:"疗痨瘵，更壮元阳"},
+{name:"川芎",pinyin:"chuānxiōng",cat:"hot",seq:5,desc:"祛风湿、补血清头"},
+{name:"续断",pinyin:"xùduàn",cat:"hot",seq:6,desc:"治崩漏、益筋强脚"},
+{name:"麻黄",pinyin:"máhuáng",cat:"hot",seq:7,desc:"表汗以疗咳逆"},
+{name:"韭子",pinyin:"jiǔzǐ",cat:"hot",seq:8,desc:"壮阳而医白浊"},
+{name:"川乌",pinyin:"chuānwū",cat:"hot",seq:9,desc:"破积，消痰治风痹"},
+{name:"天雄",pinyin:"tiānxiōng",cat:"hot",seq:10,desc:"散寒，去湿助精阳"},
+{name:"川椒",pinyin:"chuānjiāo",cat:"hot",seq:11,desc:"达下"},
+{name:"干姜",pinyin:"gānjiāng",cat:"hot",seq:12,desc:"暖中"},
+{name:"胡芦巴",pinyin:"húlúbā",cat:"hot",seq:13,desc:"治虚泠之疝气"},
+{name:"生卷柏",pinyin:"shēngjuǎnbǎi",cat:"hot",seq:14,desc:"破症葭而血通"},
+{name:"白朮",pinyin:"báizhú",cat:"hot",seq:15,desc:"消痰壅、温胃，止吐泻"},
+{name:"菖蒲",pinyin:"chāngpú",cat:"hot",seq:16,desc:"开心气、散泠，治耳聋"},
+{name:"丁香",pinyin:"dīngxiāng",cat:"hot",seq:17,desc:"快脾胃而止吐逆"},
+{name:"良姜",pinyin:"liángjiāng",cat:"hot",seq:18,desc:"止心气痛之攻冲"},
+{name:"肉苁蓉",pinyin:"ròucōngróng",cat:"hot",seq:19,desc:"填精益肾"},
+{name:"石硫黄",pinyin:"shíliúhuáng",cat:"hot",seq:20,desc:"暖胃驱虫"},
+{name:"胡椒",pinyin:"hújiāo",cat:"hot",seq:21,desc:"主去痰而除泠"},
+{name:"秦椒",pinyin:"qínjiāo",cat:"hot",seq:22,desc:"主攻痛而去风"},
+{name:"吴茱萸",pinyin:"wúzhūyú",cat:"hot",seq:23,desc:"疗心腹之泠气"},
+{name:"灵砂",pinyin:"língshā",cat:"hot",seq:24,desc:"定心脏之怔忡"},
+{name:"毕澄茄",pinyin:"bìchéngqié",cat:"hot",seq:25,desc:"散肾泠、助脾胃"},
+{name:"蓬莪朮",pinyin:"péngélú",cat:"hot",seq:26,desc:"疗心痛、破积聚"},
+{name:"缩砂",pinyin:"suōshā",cat:"hot",seq:27,desc:"止吐泻安胎，化酒食"},
+{name:"附子",pinyin:"fùzǐ",cat:"hot",seq:28,desc:"疗虚寒反胃，壮元阳"},
+{name:"白豆蔻",pinyin:"báidòukòu",cat:"hot",seq:29,desc:"治泠泻，疗痈止痛于乳香"},
+{name:"红豆蔻",pinyin:"hóngdòukòu",cat:"hot",seq:30,desc:"止吐酸，消血杀虫于干漆"},
+{name:"鹿茸",pinyin:"lùróng",cat:"hot",seq:31,desc:"生精血，腰脊崩漏皆补"},
+{name:"虎骨",pinyin:"hǔgǔ",cat:"hot",seq:32,desc:"壮筋骨，寒湿毒风并祛"},
+{name:"檀香",pinyin:"tánxiāng",cat:"hot",seq:33,desc:"定霍乱，心气之痛愈"},
+{name:"鹿角",pinyin:"lùjiǎo",cat:"hot",seq:34,desc:"秘精髓，腰脊之痛除"},
+{name:"米醋",pinyin:"mǐcù",cat:"hot",seq:35,desc:"消肿益血"},
+{name:"紫苏",pinyin:"zǐsū",cat:"hot",seq:36,desc:"下气散寒"},
+{name:"扁豆",pinyin:"biǎndòu",cat:"hot",seq:37,desc:"助脾，酒有行药破结之用"},
+{name:"麝香",pinyin:"shèxiāng",cat:"hot",seq:38,desc:"开窍，葱为通中发汗之需"},
+{name:"五灵脂",pinyin:"wǔlíngzhī",cat:"hot",seq:39,desc:"治崩漏，理血气之刺痛"},
+{name:"麒麟竭",pinyin:"qílínjié",cat:"hot",seq:40,desc:"止血出，疗金疮之伤折"},
+{name:"糜茸",pinyin:"mǐróng",cat:"hot",seq:41,desc:"壮阳以助肾"},
+{name:"当归",pinyin:"dāngguī",cat:"hot",seq:42,desc:"补虚而养血"},
+{name:"乌贼骨",pinyin:"wūzéigǔ",cat:"hot",seq:43,desc:"止带下，除崩漏目翳"},
+{name:"鹿角胶",pinyin:"lùjiǎojiāo",cat:"hot",seq:44,desc:"住血崩，补虚羸劳绝"},
+{name:"白花蛇",pinyin:"báihuāshé",cat:"hot",seq:45,desc:"治瘫痪，疗风痒之癣疹"},
+{name:"乌梢蛇",pinyin:"wūshāoshé",cat:"hot",seq:46,desc:"疗不仁，去疮疡之风热"},
+{name:"乌药",pinyin:"wūyào",cat:"hot",seq:47,desc:"治泠气"},
+{name:"禹余粮",pinyin:"yǔyúliáng",cat:"hot",seq:48,desc:"疗崩漏"},
+{name:"巴豆",pinyin:"bādòu",cat:"hot",seq:49,desc:"利痰水，破寒积"},
+{name:"独活",pinyin:"dúhuó",cat:"hot",seq:50,desc:"疗诸风，不论新久"},
+{name:"山茱萸",pinyin:"shānzhūyú",cat:"hot",seq:51,desc:"治头晕遗精"},
+{name:"白石英",pinyin:"báishíyīng",cat:"hot",seq:52,desc:"医咳嗽吐脓"},
+{name:"厚朴",pinyin:"hòupò",cat:"hot",seq:53,desc:"温胃去呕胀，消痰亦验"},
+{name:"肉桂",pinyin:"ròuguì",cat:"hot",seq:54,desc:"行血疗心痛，止汗如神"},
+{name:"鲫鱼",pinyin:"jìyú",cat:"hot",seq:55,desc:"温胃之功"},
+{name:"代赭",pinyin:"dàizhě",cat:"hot",seq:56,desc:"镇肝之剂"},
+{name:"沉香",pinyin:"chénxiāng",cat:"hot",seq:57,desc:"下气补肾，定霍乱之心痛"},
+{name:"橘皮",pinyin:"júpí",cat:"hot",seq:58,desc:"开胃去痰，导壅滞之逆气"},
+//温性药 3-XX
+{name:"木香",pinyin:"mùxiāng",cat:"warm",seq:1,desc:"理乎气滞"},
+{name:"半夏",pinyin:"bànxià",cat:"warm",seq:2,desc:"主于痰湿"},
+{name:"苍朮",pinyin:"cāngzhú",cat:"warm",seq:3,desc:"治目盲，燥脾去湿"},
+{name:"萝卜",pinyin:"luóbo",cat:"warm",seq:4,desc:"去膨胀，下气治面"},
+{name:"钟乳粉",pinyin:"zhōngrǔfěn",cat:"warm",seq:5,desc:"补肺气，疗肺虚"},
+{name:"青盐",pinyin:"qīngyán",cat:"warm",seq:6,desc:"治腹痛，滋肾水"},
+{name:"山药",pinyin:"shānyào",cat:"warm",seq:7,desc:"腰湿能医"},
+{name:"阿胶",pinyin:"ējiāo",cat:"warm",seq:8,desc:"痢嗽皆止"},
+{name:"赤石脂",pinyin:"chìshízhī",cat:"warm",seq:9,desc:"治精浊而止泄，兼补崩中"},
+{name:"阳起石",pinyin:"yángqǐshí",cat:"warm",seq:10,desc:"暖子宫以壮阳，疗阴痿"},
+{name:"紫苑",pinyin:"zǐwǎn",cat:"warm",seq:11,desc:"治嗽"},
+{name:"防风",pinyin:"fángfēng",cat:"warm",seq:12,desc:"怯风"},
+{name:"苍耳子",pinyin:"cāngěrzǐ",cat:"warm",seq:13,desc:"透脑止涕"},
+{name:"威灵仙",pinyin:"wēilíngxiān",cat:"warm",seq:14,desc:"宣风通气"},
+{name:"细辛",pinyin:"xìxīn",cat:"warm",seq:15,desc:"去头风，止嗽而疗齿痛"},
+{name:"艾叶",pinyin:"àiyè",cat:"warm",seq:16,desc:"治崩漏、安胎而医痢红"},
+{name:"羌活",pinyin:"qiānghuó",cat:"warm",seq:17,desc:"明目驱风，除湿毒肿痛"},
+{name:"白芷",pinyin:"báizhǐ",cat:"warm",seq:18,desc:"止崩治肿，疗痔瘘疮痈"},
+{name:"红蓝花",pinyin:"hónglánhuā",cat:"warm",seq:19,desc:"通经，治产后恶血"},
+{name:"刘寄奴",pinyin:"liújìnú",cat:"warm",seq:20,desc:"散血，疗烫火金疮之苦"},
+{name:"茵芋叶",pinyin:"yīnyùyè",cat:"warm",seq:21,desc:"减风湿之痛"},
+{name:"骨碎补",pinyin:"gǔsuìbǔ",cat:"warm",seq:22,desc:"疗折伤之症"},
+{name:"藿香叶",pinyin:"huòxiāngyè",cat:"warm",seq:23,desc:"辟恶气而定霍乱"},
+{name:"草果仁",pinyin:"cǎoguǒrén",cat:"warm",seq:24,desc:"温脾胃而止呕吐"},
+{name:"巴戟天",pinyin:"bājǐtiān",cat:"warm",seq:25,desc:"治阴疝白浊，补肾尤滋"},
+{name:"元胡索",pinyin:"yuánhúsuǒ",cat:"warm",seq:26,desc:"理气痛血凝，调经有助"},
+{name:"款冬花",pinyin:"kuǎndōnghuā",cat:"warm",seq:27,desc:"润肺，去痰嗽以定喘"},
+{name:"肉豆蔻",pinyin:"ròudòukòu",cat:"warm",seq:28,desc:"温中，止霍乱而助脾"},
+{name:"抚芎",pinyin:"fǔxiōng",cat:"warm",seq:29,desc:"走经络之痛"},
+{name:"何首乌",pinyin:"héshǒuwū",cat:"warm",seq:30,desc:"治疮疥之资"},
+{name:"姜黄",pinyin:"jiānghuáng",cat:"warm",seq:31,desc:"下气、破恶血之积"},
+{name:"防己",pinyin:"fángjǐ",cat:"warm",seq:32,desc:"消肿、去风湿之施"},
+{name:"蒿本",pinyin:"gāoběn",cat:"warm",seq:33,desc:"除风，主妇人阴痛"},
+{name:"仙茅",pinyin:"xiānmáo",cat:"warm",seq:34,desc:"益肾，扶元气虚弱之衰"},
+{name:"破故纸",pinyin:"pògùzhǐ",cat:"warm",seq:35,desc:"温肾，补精髓与劳伤"},
+{name:"宣木瓜",pinyin:"xuānmùguā",cat:"warm",seq:36,desc:"入肝，疗脚气并水肿"},
+{name:"杏仁",pinyin:"xìngrén",cat:"warm",seq:37,desc:"润肺燥止嗽之剂"},
+{name:"茴香",pinyin:"huíxiāng",cat:"warm",seq:38,desc:"治疝气肾疼"},
+{name:"诃子",pinyin:"hēzǐ",cat:"warm",seq:39,desc:"生精止渴，疗滑泄之痾"},
+{name:"秦艽",pinyin:"qínjiāo",cat:"warm",seq:40,desc:"攻风逐水，除肢节之痛"},
+{name:"槟榔",pinyin:"bīngláng",cat:"warm",seq:41,desc:"豁痰而逐水，杀刺白虫"},
+{name:"杜仲",pinyin:"dùzhòng",cat:"warm",seq:42,desc:"益肾而添精，去腰膝重"},
+{name:"紫石英",pinyin:"zǐshíyīng",cat:"warm",seq:43,desc:"疗惊悸崩中之疾"},
+{name:"橘核仁",pinyin:"júhérén",cat:"warm",seq:44,desc:"治腰痛疝气之真"},
+{name:"金樱子",pinyin:"jīnyīngzǐ",cat:"warm",seq:45,desc:"涩精"},
+{name:"紫苏子",pinyin:"zǐsūzǐ",cat:"warm",seq:46,desc:"下气涎"},
+{name:"淡豆豉",pinyin:"dàndòuchǐ",cat:"warm",seq:47,desc:"发伤寒之表"},
+{name:"大小蓟",pinyin:"dàxiǎojì",cat:"warm",seq:48,desc:"除诸血之鲜"},
+{name:"益智",pinyin:"yìzhì",cat:"warm",seq:49,desc:"安神，治小便之频数"},
+{name:"麻仁",pinyin:"márén",cat:"warm",seq:50,desc:"润肺，利六腑之燥坚"},
+{name:"黄耆",pinyin:"huángqí",cat:"warm",seq:51,desc:"补虚弱、排疮脓"},
+{name:"狗脊",pinyin:"gǒujǐ",cat:"warm",seq:52,desc:"强腰脚、壮筋骨"},
+{name:"菟丝子",pinyin:"tùsīzǐ",cat:"warm",seq:53,desc:"补肾以明目"},
+{name:"马兰花",pinyin:"mǎlánhuā",cat:"warm",seq:54,desc:"治疝而有益"},
+//平性药 4-XX
+{name:"磠砂",pinyin:"lǔshā",cat:"neutral",seq:1,desc:"去积"},
+{name:"龙齿",pinyin:"lóngchǐ",cat:"neutral",seq:2,desc:"安魂"},
+{name:"青皮",pinyin:"qīngpí",cat:"neutral",seq:3,desc:"快膈除膨胀，利脾胃"},
+{name:"芡实",pinyin:"qiànshí",cat:"neutral",seq:4,desc:"益精治白浊，兼补真元"},
+{name:"木贼草",pinyin:"mùzéicǎo",cat:"neutral",seq:5,desc:"去目翳，崩漏亦医"},
+{name:"花蕊石",pinyin:"huāruǐshí",cat:"neutral",seq:6,desc:"治金疮，血行则却"},
+{name:"决明",pinyin:"juémíng",cat:"neutral",seq:7,desc:"和肝气，治眼之剂"},
+{name:"天麻",pinyin:"tiānmá",cat:"neutral",seq:8,desc:"主头眩，怯风之药"},
+{name:"甘草",pinyin:"gāncǎo",cat:"neutral",seq:9,desc:"和诸药而解百毒，气平"},
+{name:"石斛",pinyin:"shíhú",cat:"neutral",seq:10,desc:"平胃气而补肾虚，更医脚弱"},
+{name:"商陆",pinyin:"shānglù",cat:"neutral",seq:11,desc:"治肿"},
+{name:"覆盆",pinyin:"fùpén",cat:"neutral",seq:12,desc:"益精"},
+{name:"琥珀",pinyin:"hǔpò",cat:"neutral",seq:13,desc:"安神而散血"},
+{name:"朱砂",pinyin:"zhūshā",cat:"neutral",seq:14,desc:"镇心而有灵"},
+{name:"牛膝",pinyin:"niúxī",cat:"neutral",seq:15,desc:"强足补精，兼疗腰痛"},
+{name:"龙骨",pinyin:"lónggǔ",cat:"neutral",seq:16,desc:"止汗住泄，更治血崩"},
+{name:"甘松",pinyin:"gānsōng",cat:"neutral",seq:17,desc:"理风气而痛止"},
+{name:"蒺藜",pinyin:"jílí",cat:"neutral",seq:18,desc:"疗风疮而目明"},
+{name:"人参",pinyin:"rénshēn",cat:"neutral",seq:19,desc:"润肺宁心，开脾助胃"},
+{name:"蒲黄",pinyin:"púhuáng",cat:"neutral",seq:20,desc:"止崩治衄，消痨调经"},
+{name:"南星",pinyin:"nánxīng",cat:"neutral",seq:21,desc:"醒脾，去惊风痰吐之忧"},
+{name:"三棱",pinyin:"sānléng",cat:"neutral",seq:22,desc:"破积，除血块气滞之症"},
+{name:"没食",pinyin:"mòshí",cat:"neutral",seq:23,desc:"主泄泻而神效"},
+{name:"皂角",pinyin:"zàojiǎo",cat:"neutral",seq:24,desc:"治风痰而响应"},
+{name:"桑螵蛸",pinyin:"sāngpiāoxiāo",cat:"neutral",seq:25,desc:"疗遗精之泄"},
+{name:"鸭头血",pinyin:"yātóuxuè",cat:"neutral",seq:26,desc:"医水肿之盛"},
+{name:"蛤蚧",pinyin:"géjiè",cat:"neutral",seq:27,desc:"治痨嗽"},
+{name:"牛蒡子",pinyin:"niúbàngzǐ",cat:"neutral",seq:28,desc:"疏风壅之痰"},
+{name:"全蝎",pinyin:"quánxiē",cat:"neutral",seq:29,desc:"主风瘫"},
+{name:"酸枣仁",pinyin:"suānzǎorén",cat:"neutral",seq:30,desc:"去怔忡之病"},
+{name:"桑寄生",pinyin:"sāngjìshēng",cat:"neutral",seq:31,desc:"益血安胎，止腰痛"},
+{name:"大腹子",pinyin:"dàfùzǐ",cat:"neutral",seq:32,desc:"去膨下气，令胃和"},
+{name:"小草",pinyin:"xiǎocǎo",cat:"neutral",seq:33,desc:"宁心之妙"},
+{name:"远志",pinyin:"yuǎnzhì",cat:"neutral",seq:34,desc:"宁心之妙"},
+{name:"木通",pinyin:"mùtōng",cat:"neutral",seq:35,desc:"利水之多"},
+{name:"猪苓",pinyin:"zhūlíng",cat:"neutral",seq:36,desc:"利水之多"},
+{name:"莲肉",pinyin:"liánròu",cat:"neutral",seq:37,desc:"清心醒脾之用"},
+{name:"没药",pinyin:"mòyào",cat:"neutral",seq:38,desc:"治疮散血之科"},
+{name:"郁李仁",pinyin:"yùlǐrén",cat:"neutral",seq:39,desc:"润肠宣血，去浮肿之疾"},
+{name:"茯神",pinyin:"fùshén",cat:"neutral",seq:40,desc:"宁心益智，除惊悸之痾"},
+{name:"白茯苓",pinyin:"báifúlíng",cat:"neutral",seq:41,desc:"补虚劳，多在心脾之有眚"},
+{name:"赤茯苓",pinyin:"chìfúlíng",cat:"neutral",seq:42,desc:"破结血，利水道以无毒"},
+{name:"麦芽",pinyin:"màiyá",cat:"neutral",seq:43,desc:"助脾化食之功"},
+{name:"小麦",pinyin:"xiǎomài",cat:"neutral",seq:44,desc:"止汗养心之力"},
+{name:"白附子",pinyin:"báifùzǐ",cat:"neutral",seq:45,desc:"去面风之游走"},
+{name:"大腹皮",pinyin:"dàfùpí",cat:"neutral",seq:46,desc:"治水肿之泛溢"},
+{name:"椿根白皮",pinyin:"chūngēnbáipí",cat:"neutral",seq:47,desc:"主泻血"},
+{name:"桑根白皮",pinyin:"sānggēnbáipí",cat:"neutral",seq:48,desc:"主喘息"},
+{name:"桃仁",pinyin:"táorén",cat:"neutral",seq:49,desc:"破瘀血兼治腰痛"},
+{name:"神曲",pinyin:"shénqū",cat:"neutral",seq:50,desc:"健脾胃而进饮食"},
+{name:"五加皮",pinyin:"wǔjiāpí",cat:"neutral",seq:51,desc:"坚筋骨以立行"},
+{name:"柏子仁",pinyin:"bǎizǐrén",cat:"neutral",seq:52,desc:"养心神而有益"},
+{name:"安息香",pinyin:"ānxīxiāng",cat:"neutral",seq:53,desc:"辟恶，止心腹之痛"},
+{name:"冬瓜仁",pinyin:"dōngguārén",cat:"neutral",seq:54,desc:"醒脾，饮食之资"},
+{name:"僵蚕",pinyin:"jiāngcán",cat:"neutral",seq:55,desc:"治诸风之喉闭"},
+{name:"百合",pinyin:"bǎihé",cat:"neutral",seq:56,desc:"恋肺痨之嗽萎"},
+{name:"赤小豆",pinyin:"chìxiǎodòu",cat:"neutral",seq:57,desc:"解热毒，疮肿宜用"},
+{name:"枇杷叶",pinyin:"pípayè",cat:"neutral",seq:58,desc:"下逆气，哕呕可医"},
+{name:"连翘",pinyin:"liánqiào",cat:"neutral",seq:59,desc:"排疮脓与肿毒"},
+{name:"石南叶",pinyin:"shínányè",cat:"neutral",seq:60,desc:"利筋骨与毛皮"},
+{name:"谷芽",pinyin:"gǔyá",cat:"neutral",seq:61,desc:"养脾"},
+{name:"阿魏",pinyin:"āwèi",cat:"neutral",seq:62,desc:"除邪气而破积"},
+{name:"紫河车",pinyin:"zǐhéchē",cat:"neutral",seq:63,desc:"补血"},
+{name:"大枣",pinyin:"dàzǎo",cat:"neutral",seq:64,desc:"和药性以开脾"},
+{name:"鳖甲",pinyin:"biējiǎ",cat:"neutral",seq:65,desc:"治痨疟，兼破症葭"},
+{name:"龟甲",pinyin:"guījiǎ",cat:"neutral",seq:66,desc:"坚筋骨，更疗崩疾"},
+{name:"乌梅",pinyin:"wūméi",cat:"neutral",seq:67,desc:"主便血疟疾之用"},
+{name:"竹沥",pinyin:"zhúlì",cat:"neutral",seq:68,desc:"治中风声音之失"}
+];
+const catPrefix={cold:"1",hot:"2",warm:"3",neutral:"4"};
+const catLabels={cold:"寒",hot:"热",warm:"温",neutral:"平"};
+const catNames={cold:"寒性药",hot:"热性药",warm:"温性药",neutral:"平性药"};
+const grid=document.getElementById("grid"),empty=document.getElementById("empty"),searchInput=document.getElementById("search");
+let curCat="all";
+function buildCard(h,i){
+  const delay=i*18,code=catPrefix[h.cat]+"-"+String(h.seq).padStart(2,"0");
+  return `<div class="card" style="animation-delay:${delay}ms"><div class="card-top"><div class="code ${h.cat}"><span class="cat-num">${catLabels[h.cat]}</span><span class="seq-num">${String(h.seq).padStart(2,"0")}</span></div><div class="title-wrap"><div class="card-title">${h.name}</div><div class="card-pinyin">${h.pinyin}</div></div></div><div class="card-desc">${h.desc}</div><div style="margin-top:10px"><span class="tag ${h.cat}">${code} · ${catNames[h.cat]}</span></div></div>`;
+}
+function render(){
+  const q=searchInput.value.trim().toLowerCase(),filtered=herbs.filter(h=>{const mc=curCat==="all"||h.cat===curCat,mq=!q||h.name.toLowerCase().includes(q)||h.pinyin.toLowerCase().includes(q)||h.desc.toLowerCase().includes(q);return mc&&mq;});
+  if(filtered.length===0){grid.style.display="none";empty.style.display="block";}else{grid.style.display="";empty.style.display="none";grid.innerHTML=filtered.map((h,i)=>buildCard(h,i)).join("");}
+}
+document.querySelectorAll(".stat").forEach(btn=>{btn.addEventListener("click",()=>{document.querySelectorAll(".stat").forEach(b=>b.classList.remove("active"));btn.classList.add("active");curCat=btn.dataset.cat;render();});});
+searchInput.addEventListener("input",render);
+render();
+</script>
+</body>
+</html>
